@@ -1,0 +1,87 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class GridManager : MonoBehaviour
+{
+    public int height;
+    public int width;
+    public int StartingTurns;
+    public int turnsLeft;
+    public int currentScore;
+    public GameObject tilePrefab;
+    public GameObject[] cookies;
+    private BackgroundTile[,] allTiles;
+    public GameObject[,] allCookies;
+    public Text textValue;
+    public Text textValue2;
+    public bool isMatched = false;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        allTiles = new BackgroundTile[width, height];
+        allCookies = new GameObject[width, height];
+        StartUp();
+        turnsLeft = StartingTurns;
+
+    }
+
+
+    private void StartUp() //
+    {
+        for (int i = 0; i < width; i++) //Flusher igennem hele "Griddet mens at den laver Objekter der bliver defineret i "Game Object""
+        {
+            for (int i1 = 0; i1 < height; i1++)
+            {
+                Vector2 tempPosition = new Vector2(i, i1);
+                GameObject backgroundTile = Instantiate(tilePrefab, tempPosition, Quaternion.identity) as GameObject;
+                backgroundTile.transform.parent = this.transform;
+                backgroundTile.name = "( " + i + ", " + i1 + " )"; //Navngiver "tiles" til position
+
+                int _cookie = Random.Range(0, cookies.Length);
+                GameObject cookie = Instantiate(cookies[_cookie], tempPosition, Quaternion.identity);
+                cookie.transform.parent = this.transform; //Childer til "BackgroundTile"
+                cookie.name = "C " + "( " + i + ", " + i1 + " )";
+                allCookies[i, i1] = cookie;
+            }
+        }
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        textValue.text = turnsLeft.ToString();
+        textValue2.text = currentScore.ToString();
+    }
+
+    private void DestroyCookiesCord (int column, int row)
+    {
+        if (allCookies[column,row].GetComponent<Dot>().Matched)
+            {
+                Destroy(allCookies[column, row]);
+                allCookies[column, row] = null;
+            }
+    }
+
+    public void DestroyCookies ()
+    {
+        for(int i; i < width; i++)
+        {
+            for (int i1; i1 < height; i1++)
+            {
+                if(allCookies[i,i1] != null)
+                {
+                    DestroyCookiesCord(i, i1);
+                }
+            }
+        }
+    }
+
+    void FindMatch()
+    {
+
+    }
+}
+

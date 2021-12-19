@@ -1,0 +1,149 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+
+public class Cookie : MonoBehaviour
+{
+    public int column; //x
+    public int row; //y
+    public int targetX;
+    public int targetY;
+    private GridManager board;
+    private GameObject ThisCookie;
+    private GameObject otherCookie;
+    private Vector2 firstTouchPos;
+    private Vector2 finalTouchPos;
+    private Vector2 tempPos;
+    public float swipeAngle = 0f;
+
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        board = FindObjectOfType<GridManager>();
+        targetX = (int)transform.position.x;
+        targetY = (int)transform.position.y;
+        column = targetX;
+        row = targetY;
+ 
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        //Turns
+        Check();
+        targetX = column;
+        targetY = row;
+        if (Mathf.Abs(targetX - transform.position.x) > 0.1)
+        {
+            //Hvis den ikke er tæt på så ryk imod i stedet
+            tempPos = new Vector2(targetX, transform.position.y);
+            transform.position = Vector2.Lerp(transform.position, tempPos, 0.4f);
+        }
+        else
+            {
+            //Sæt positionen
+            tempPos = new Vector2(targetX, transform.position.y);
+            transform.position = tempPos;
+            board.allCookies[column, row] = this.gameObject;
+        }
+        if (Mathf.Abs(targetY - transform.position.y) > 0.1)
+        {
+            //Hvis den ikke er tæt på så ryk imod i stedet
+            tempPos = new Vector2(transform.position.x, targetY);
+            transform.position = Vector2.Lerp(transform.position, tempPos, 0.4f);
+        }
+        else
+        {
+            //Sæt positionen
+            tempPos = new Vector2(transform.position.x, targetY);
+            transform.position = tempPos;
+            board.allCookies[column, row] = this.gameObject;
+        }
+    }
+
+    void Points()
+    {
+        board.currentScore += Random.Range(200, 800);
+    }
+
+
+    void OnMouseDown()
+    {
+        if (board.turnsLeft > 0)
+        {
+            AudioSource audio = gameObject.AddComponent<AudioSource>();
+            AudioClip ClickClipDown = (AudioClip)Resources.Load("ClickDown");
+            audio.PlayOneShot(ClickClipDown, 1.0f);
+            firstTouchPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Points();
+        }
+    }
+
+    void OnMouseUp() //Definerer "finalTouchPos" udfra hvor musen er placeret iden for kameraet
+    {
+        if (board.turnsLeft > 0)
+        {
+            AudioSource audio1 = gameObject.AddComponent<AudioSource>();
+            AudioClip ClickClipUp = (AudioClip)Resources.Load("ClickUp");
+            audio1.PlayOneShot(ClickClipUp, 1.0f);
+            finalTouchPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            CalcAngle();
+
+        }
+
+    }
+
+    void CalcAngle()
+    {
+        swipeAngle = Mathf.Atan2(finalTouchPos.y - firstTouchPos.y, finalTouchPos.x - firstTouchPos.x) * 180 / Mathf.PI;
+        Move();
+    }
+
+    void Move() //Udfører skiftet.
+    {
+        if(swipeAngle > -45 && swipeAngle <= 45 && column < board.width)
+        {
+            //Højre
+            otherCookie = board.allCookies[column + 1, row];
+            otherCookie.GetComponent<Cookie>().column -= 1;
+            column += 1;
+            board.turnsLeft -= 1;
+        } 
+        else if (swipeAngle > 45 && swipeAngle <= 135 && row < board.height)
+        {
+            //Op
+            otherCookie = board.allCookies[column , row + 1];
+            otherCookie.GetComponent<Cookie>().row -= 1;
+            row += 1;
+            board.turnsLeft -= 1;
+        } 
+        else if ((swipeAngle > 135 || swipeAngle <= -135) && column > 0)
+        {
+            //Venstre
+            otherCookie = board.allCookies[column - 1, row];
+            otherCookie.GetComponent<Cookie>().column += 1;
+            column -= 1;
+            board.turnsLeft -= 1;
+        } 
+        else if (swipeAngle < -45 && swipeAngle >= -135 && row > 0)
+        {
+            //Ned
+            otherCookie = board.allCookies[column , row - 1];
+            otherCookie.GetComponent<Cookie>().row += 1;
+            row -= 1;
+            board.turnsLeft -= 1;
+        }
+    }
+
+    void Check()
+    {
+        
+        ThisCookie = this.gameObject.sprite.name;
+        Debug.Log(ThisCookie);
+    }
+
+}
+
